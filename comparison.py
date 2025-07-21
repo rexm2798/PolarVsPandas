@@ -42,7 +42,7 @@ def benchmark_libraries():
     results["Polars_Read"] = time.time() - start
 
     start = time.time()
-    agg_pl = df_pl.groupby("group").agg(pl.col("value").mean())
+    agg_pl = df_pl.group_by("group").agg(pl.col("value").mean())
     results["Polars_Agg"] = time.time() - start
 
     start = time.time()
