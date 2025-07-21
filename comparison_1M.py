@@ -10,18 +10,15 @@ df_pandas = pd.DataFrame({
     "group": np.random.choice(['A', 'B', 'C', 'D'], rows),
     "value": np.random.rand(rows),
 })
+df_pandas.to_csv("test_data_1M.csv", index=False)
 
-# Saving it to CSV for reloading
-df_pandas.to_csv("test_data.csv", index=False)
-
-
-# Benchmarking Functionn
+# Benchmarking Function
 def benchmark_libraries():
     results = {}
 
     # === Pandas ===
     start = time.time()
-    df_pd = pd.read_csv("test_data.csv")
+    df_pd = pd.read_csv("test_data_1M.csv")
     results["Pandas_Read"] = time.time() - start
 
     start = time.time()
@@ -38,7 +35,7 @@ def benchmark_libraries():
 
     # === Polars ===
     start = time.time()
-    df_pl = pl.read_csv("test_data.csv")
+    df_pl = pl.read_csv("test_data_1M.csv")
     results["Polars_Read"] = time.time() - start
 
     start = time.time()
@@ -58,10 +55,29 @@ def benchmark_libraries():
 # Running benchmark
 result = benchmark_libraries()
 
-# Format output
-print(f"{'Operation':<20} {'Pandas (s)':<15} {'Polars (s)':<15}")
-print("-" * 50)
-print(f"{'Read Data':<20} {result['Pandas_Read']:<15.6f} {result['Polars_Read']:<15.6f}")
-print(f"{'Aggregation':<20} {result['Pandas_Agg']:<15.6f} {result['Polars_Agg']:<15.6f}")
-print(f"{'Filtering':<20} {result['Pandas_Filter']:<15.6f} {result['Polars_Filter']:<15.6f}")
-print(f"{'Joining':<20} {result['Pandas_Join']:<15.6f} {result['Polars_Join']:<15.6f}")
+# Display results with comparison
+print(f"{'Operation':<20} {'Pandas (s)':<15} {'Polars (s)':<15} {'Comparison':<25}")
+print("-" * 75)
+
+operations = ["Read", "Agg", "Filter", "Join"]
+for op in operations:
+    pandas_time = result[f"Pandas_{op}"]
+    polars_time = result[f"Polars_{op}"]
+
+    if polars_time < pandas_time:
+        speed = pandas_time / polars_time
+        comparison = f"🔼 {speed:.1f}× faster"
+    elif abs(polars_time - pandas_time) / pandas_time < 0.05:
+        comparison = "⚖️ Similar speed"
+    else:
+        slowdown = polars_time / pandas_time
+        comparison = f"🔽 {slowdown:.1f}× slower"
+
+    op_label = {
+        "Read": "Read Data",
+        "Agg": "Aggregation",
+        "Filter": "Filtering",
+        "Join": "Joining"
+    }[op]
+
+    print(f"{op_label:<20} {pandas_time:<15.6f} {polars_time:<15.6f} {comparison:<25}")
